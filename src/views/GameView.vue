@@ -1,25 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useWebSocketStore } from '@/stores/websocket';
+import { useGameStore } from '@/stores/game'; // Import store Pinia
 
-// Contoh data pertanyaan (bisa diganti dengan data dari API atau state management)
-const questions = ref([
-  "Apa momen terbaik yang pernah kalian alami bersama?",
-  "Siapa yang paling suka bercanda di antara kalian?",
-  "Jika bisa berlibur bersama, ke mana tujuan impian kalian?",
-  "Apa hal pertama yang menarik perhatianmu dari pasanganmu?",
-  "Bagaimana kalian merayakan anniversary pertama?",
-]);
+const websocketStore = useWebSocketStore();
+const gameStore = useGameStore(); // Ambil instance store game
+let totalQuestionAttempt = ref(0); // Total pertanyaan yang sudah dijawab
+const currentQuestion = ref("");
+const loading = ref(true); // Loading state
 
-const currentQuestionIndex = ref(0);
-
-// Fungsi untuk menampilkan pertanyaan berikutnya
 const nextQuestion = () => {
-  if (currentQuestionIndex.value < questions.value.length - 1) {
-    currentQuestionIndex.value++;
-  } else {
-    alert("Pertanyaan sudah habis! Mulai dari awal lagi.");
-    currentQuestionIndex.value = 0;
-  }
+  websocketStore.nextAnswer();
+
+
+  // if (totalQuestionAttempt < websocketStore.questions.length - 1) {
+  //   totalQuestionAttempt.value++
+  // } else {
+  //   alert("Pertanyaan sudah habis! Mulai dari awal lagi.");
+  //   totalQuestionAttempt.value = 0;
+  // }
 };
 
 // Fungsi untuk keluar dari permainan
@@ -28,6 +27,42 @@ const exitGame = () => {
     window.location.href = "/"; // Ganti dengan route yang sesuai
   }
 };
+
+watch(
+  () => websocketStore.isGameStarted,
+  (newValue) => {
+    if (newValue) {
+      loading.value = false;
+    }
+    console.log(websocketStore.questions);
+  },
+  { immediate: true }
+);
+
+watch(
+  () => websocketStore.currentQuestionId,
+  (newValue) => {
+    if (newValue) {
+      let question = websocketStore.questions.find(
+        (question) => question.id === newValue
+      );
+      if (question) currentQuestion.value = question.text;
+    }
+    console.log({newValue});
+    console.log(websocketStore.questions);
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  websocketStore.handshake();
+
+  websocketStore.joinOrCreateRoom({
+    name: gameStore.playerName,
+    categoryId: gameStore.selectedCategory,
+  });
+
+});
 </script>
 
 <template>
@@ -37,18 +72,29 @@ const exitGame = () => {
       <p>Game Kartu Bicara untuk Menguatkan Relationship</p>
     </header>
 
-    <main>
-      <div class="card">
-        <div class="card-content">
-          <p>{{ questions[currentQuestionIndex] }}</p>
-        </div>
-      </div>
-    </main>
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="skeleton-loader">
+      <div class="skeleton-header"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-buttons"></div>
+    </div>
 
-    <footer>
-      <button class="btn-next" @click="nextQuestion">Selanjutnya</button>
-      <button class="btn-exit" @click="exitGame">Keluar Game</button>
-    </footer>
+    <!-- Main Content -->
+    <div v-else>
+      <main>
+        <div class="card">
+          <div class="card-content">
+            <p>{{ currentQuestion }}</p>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <button class="btn-next" @click="nextQuestion">Selanjutnya</button>
+        <button class="btn-exit" @click="exitGame">Keluar Game</button>
+      </footer>
+    </div>
+
   </div>
 </template>
 
@@ -130,5 +176,34 @@ button {
 
 .btn-exit:hover {
   background-color: #ff5252;
+}
+
+.skeleton-loader {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+}
+
+.skeleton-header, .skeleton-card, .skeleton-buttons {
+  background-color: #d0d0d0;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.skeleton-header {
+  height: 30px;
+  width: 70%;
+}
+
+.skeleton-card {
+  height: 100px;
+  width: 100%;
+}
+
+.skeleton-buttons {
+  height: 40px;
+  width: 100px;
 }
 </style>

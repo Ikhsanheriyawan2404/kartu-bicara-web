@@ -1,27 +1,28 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useGameStore } from '@/stores/game'; // Import store Pinia
 
 const router = useRouter();
+const gameStore = useGameStore(); // Ambil instance store game
 
 const categories = ref([
-  { id: 1, name: "Teman" },
-  { id: 2, name: "Pasangan" },
+  { id: 3, name: "Teman" },
+  { id: 4, name: "Pasangan" },
 ]);
 
 const selectedCategory = ref<number | null>(null);
 const playerName = ref<string>("");
 
-// Fungsi untuk memulai permainan
 const startGame = () => {
   if (!selectedCategory.value || !playerName.value.trim()) {
     alert("Harap pilih kategori dan masukkan nama!");
     return;
   }
-  router.push({
-    path: "/game",
-    query: { category: selectedCategory.value, name: playerName.value },
-  });
+
+  gameStore.setGameData(selectedCategory.value, playerName.value);
+
+  router.push('/game');
 };
 </script>
 
