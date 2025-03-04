@@ -7,6 +7,7 @@ interface WebSocketState {
   state: Colyseus.Room["state"] | null;
   isHandshake: boolean;
   isGameStarted: boolean;
+  isGameEnded: boolean;
   currentQuestionId: number;
   questions: Array<{ id: number; text: string; category: string; asked: boolean }>;
 }
@@ -18,6 +19,7 @@ export const useWebSocketStore = defineStore('websocket', {
     state: null,
     isHandshake: false,
     isGameStarted: false,
+    isGameEnded: false,
     currentQuestionId: 0,
     questions: [],
   }),
@@ -54,6 +56,11 @@ export const useWebSocketStore = defineStore('websocket', {
         this.state.listen("isGameStarted", (currentValue: boolean, _: any) => {
           if (currentValue === true) {
             this.isGameStarted = true;
+          }
+        });
+        this.state.listen("isGameEnded", (currentValue: boolean, _: any) => {
+          if (currentValue === true) {
+            this.isGameEnded = true;
           }
         });
 

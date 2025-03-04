@@ -40,6 +40,17 @@ watch(
 );
 
 watch(
+  () => websocketStore.isGameEnded,
+  (newValue) => {
+    if (newValue) {
+      alert("Game telah berakhir!");
+      window.location.href = "/"; // Ganti dengan route yang sesuai
+    }
+  },
+  { immediate: true }
+);
+
+watch(
   () => websocketStore.currentQuestionId,
   (newValue) => {
     if (newValue) {
