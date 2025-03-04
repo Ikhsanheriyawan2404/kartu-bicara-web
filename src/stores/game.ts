@@ -1,18 +1,19 @@
 import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
-export const useGameStore = defineStore('game', {
-  state: () => ({
-    selectedCategory: null,
-    playerName: '',
-  }),
-  actions: {
-    setGameData(categoryId: number, name: string) {
-      this.selectedCategory = categoryId;
-      this.playerName = name;
-    },
-    clearGameData() {
-      this.selectedCategory = null;
-      this.playerName = '';
-    },
-  },
+export const useGameStore = defineStore('game', () => {
+  const selectedCategory = ref<number | null>(null);
+  const playerName = ref<string>('');
+
+  function setGameData(categoryId: number, name: string) {
+    selectedCategory.value = categoryId;
+    playerName.value = name;
+  }
+
+  function clearGameData() {
+    selectedCategory.value = null;
+    playerName.value = '';
+  }
+
+  return { selectedCategory, playerName, setGameData, clearGameData };
 });

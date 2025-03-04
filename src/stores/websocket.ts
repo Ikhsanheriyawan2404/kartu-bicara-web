@@ -1,10 +1,21 @@
 import { defineStore } from 'pinia';
 import * as Colyseus from "colyseus.js";
 
+interface WebSocketState {
+  client: Colyseus.Client | null;
+  room: Colyseus.Room | null;
+  state: Colyseus.Room["state"] | null;
+  isHandshake: boolean;
+  isGameStarted: boolean;
+  currentQuestionId: number;
+  questions: Array<{ id: number; text: string; category: string; asked: boolean }>;
+}
+
 export const useWebSocketStore = defineStore('websocket', {
-  state: () => ({
+  state: (): WebSocketState => ({
     client: null,
     room: null,
+    state: null,
     isHandshake: false,
     isGameStarted: false,
     currentQuestionId: 0,
@@ -15,19 +26,10 @@ export const useWebSocketStore = defineStore('websocket', {
       const client = new Colyseus.Client('ws://localhost:3001');
       this.client = client;
       this.isHandshake = true;
-      // client.on('open', () => {
-      //   this.isConnected = true;
-      // });
-      // client.on('close', () => {
-      //   this.isConnected = false;
-      // });
-      // client.on('message', (message) => {
-      //   console.log('Received message:', message);
-      // });
     },
     disconnect() {
       if (this.client) {
-        this.client.close();
+        // this.client.close();
         this.client = null;
         this.isHandshake = false;
       }
@@ -45,16 +47,17 @@ export const useWebSocketStore = defineStore('websocket', {
       this.client.joinOrCreate("word_card_room", roomOptions).then(room => {
         console.log(room.sessionId, "joined", room.name);
         this.room = room;
-        room.state.questions.onAdd((question, key) => {
+        this.state = room.state;
+        this.state.questions.onAdd((question: any, _: any) => {
           this.questions.push(question);
         });
-        room.state.listen("isGameStarted", (currentValue, _) => {
+        this.state.listen("isGameStarted", (currentValue: boolean, _: any) => {
           if (currentValue === true) {
             this.isGameStarted = true;
           }
         });
 
-        room.state.listen("currentQuestionId", (currentValue, _) => {
+        this.state.listen("currentQuestionId", (currentValue: number, _: any) => {
           console.log("currentQuestionId", currentValue);
           this.currentQuestionId = currentValue;
         });
