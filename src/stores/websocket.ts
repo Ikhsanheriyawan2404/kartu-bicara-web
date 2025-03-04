@@ -25,7 +25,7 @@ export const useWebSocketStore = defineStore('websocket', {
   }),
   actions: {
     handshake() {
-      const client = new Colyseus.Client('ws://localhost:3001');
+      const client = new Colyseus.Client('ws://api-kata.brogrammer.id');
       this.client = client;
       this.isHandshake = true;
     },
