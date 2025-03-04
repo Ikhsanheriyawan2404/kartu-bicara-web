@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  
+  kartu-bicara-backend:
+    container_name: kartu-bicara-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "2567:2567"
+    networks:
+      - kartu-bicara-network
+      
+  kartu-bicara-frontend:
+    container_name: kartu-bicara-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    volumes:
+      - ./frontend:/app
+    networks:
+      - kartu-bicara-network
+
+networks:
+  kartu-bicara-network:
+    driver: bridge
